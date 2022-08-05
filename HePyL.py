@@ -279,7 +279,6 @@ class Interpretor():
                     condition = compute_val(
                         args, vals, extended_split(x[1:]), line_number)
                     if condition:
-                        print("do if!")
                         doElse = False
                         doSection = True
                     else:
