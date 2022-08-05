@@ -202,6 +202,18 @@ def text_spliter(s, line_number):
 class Interpretor():
     def __init__(self, filename) -> None:
         self.filename = filename
+        self.IsDebug = True
+        self.flip = True
+
+    def log(self, output):
+        if self.flip:
+            print(get_display(str(output)))
+        else:
+            print(output)
+
+    def debug(self, output):
+        if self.IsDebug:
+            print(output)
 
     def run(self):
         file1 = open(self.filename, 'r', encoding="utf-8")
@@ -229,7 +241,7 @@ class Interpretor():
                 line_number += 1
                 continue
             x = text_spliter(line, line_number)
-            print(line_number, " : ", x)
+            self.debug(str(line_number) + " : " + str(x))
 
             if len(x) == 0:
                 continue
@@ -285,8 +297,10 @@ class Interpretor():
                     #         message += str(get_val(args, vals,
                     #                        x[i], line_number))
                     # count += 1
-                    print(get_display(str(message)))
+                    self.log(message)
             # else:
             #     sys.exit(get_display("שגיאה בשורה " +
             #              str(line_number) + " : סינטקס לא נכון."))
             line_number += 1
+        if depth > 0:
+            hError(line_number, "קוד שגוי חסר סוף סקציה!")
