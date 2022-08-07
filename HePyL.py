@@ -2,6 +2,8 @@ import re
 from bidi.algorithm import get_display
 import sys
 
+from matplotlib.pyplot import cla
+
 """
     5 - 3 + 10 => ((5 - 3) + 10)
 
@@ -94,8 +96,8 @@ def get_val(args, vals, arg, line_number):
     hError(line_number, " : המשתנה " + arg + " לא מוגדר!")
 
 
-operations = ["+", "-", "*", "/", "==", "!=", "או",
-              "וגם", "<=", ">=", "<", ">", ",", "=", "(", ")", ")"]
+operations = ["+", "-", "*", "/", "==", "!=",
+              "<=", ">=", "<", ">", ",", "=", "(", ")", ")"]
 
 
 def find_split(word, symbols: list):
@@ -130,6 +132,12 @@ def extended_split(vec: list):
         if word[0] == "\"":
             arr.append(word)
             continue
+        elif word == "או":
+            arr.append("$או")
+            continue
+        elif word == "וגם":
+            arr.append("$וגם")
+            continue
         arr += find_split(word, operations)
     return arr
 
@@ -162,9 +170,9 @@ def compute_val(args, vals, vec: list, line_number):
             right = right >= left
         elif operation == "<=":
             right = right <= left
-        elif operation == "or":
+        elif operation == "או":
             return bool(right or left)
-        elif operation == "and":
+        elif operation == "וגם":
             return bool(right and left)
         elif operation == "<>":
             hError(line_number, "פעולה לא מוגדרת")
@@ -236,6 +244,7 @@ class Interpretor():
         self.filename = filename
         self.IsDebug = True
         self.flip = True
+        self.decodeding = []
 
     def log(self, output):
         if self.flip:
@@ -276,7 +285,7 @@ class Interpretor():
             if skip:
                 continue
             x = text_spliter(line, current_line)
-            #self.debug(str(current_line) + " : " + str(x))
+            # self.debug(str(current_line) + " : " + str(x))
 
             if len(x) == 0:
                 continue
@@ -296,7 +305,7 @@ class Interpretor():
 
                     if goto >= 0:
                         next_line = goto
-                        #print("goto", goto)
+                        # print("goto", goto)
                     continue
 
             if(x[0] == "אחרת"):
