@@ -10,7 +10,7 @@ import sys
 
     <pt> := <Number>
             | ( <nop> )
-    
+
     <Vals> := <String>
             | <Number>
 
@@ -47,27 +47,55 @@ def hError(line, error):
     sys.exit(get_display("שגיאה בשורה " + str(line) + " : " + error))
 
 
-def get_val(args, vals, val, line_number):
-    if val[0] == "\"":
-        return val[1:]
+def clear_scope(args: list, vals: list):
+    current = args.pop()
+    vals.pop()
+    while current != "$":
+        current = args.pop()
+        vals.pop()
 
-    if val.isdigit():
-        return int(val)
-    if val.replace('.', '', 1).isdigit():
-        return float(val)
-    elif val == "לא":
+
+def override_variable(args: list, vals: list, arg, val):
+    for i in range(len(args) - 1, -1, -1):
+        if args[i] == arg:
+            vals[i] = val
+            return True
+    return False
+
+
+def add_variable(args: list, vals: list, arg, val):
+    for i in range(len(args) - 1, -1, -1):
+        if args[i] == "$":
+            break
+
+        if args[i] == arg:
+            vals[i] = val
+            return
+    args.append(arg)
+    vals.append(val)
+
+
+def get_val(args, vals, arg, line_number):
+    if arg[0] == "\"":
+        return arg[1:]
+
+    if arg.isdigit():
+        return int(arg)
+    if arg.replace('.', '', 1).isdigit():
+        return float(arg)
+    elif arg == "לא":
         return False
-    elif val == "כן":
+    elif arg == "כן":
         return True
     else:
         for i in range(len(args) - 1, -1, -1):
-            if args[i] == val:
+            if args[i] == arg:
                 return vals[i]
-    hError(line_number, " : המשתנה " + val + " לא מוגדר!")
+    hError(line_number, " : המשתנה " + arg + " לא מוגדר!")
 
 
 operations = ["+", "-", "*", "/", "==", "!=", "או",
-              "וגם", "<=", ">=", "<", ">", "(", ")", ")"]
+              "וגם", "<=", ">=", "<", ">", ",", "=", "(", ")", ")"]
 
 
 def find_split(word, symbols: list):
@@ -99,6 +127,9 @@ def find_split(word, symbols: list):
 def extended_split(vec: list):
     arr = []
     for word in vec:
+        if word[0] == "\"":
+            arr.append(word)
+            continue
         arr += find_split(word, operations)
     return arr
 
@@ -108,7 +139,7 @@ def compute_val(args, vals, vec: list, line_number):
         return
 
     def execute_operation(operation, right, left):
-        #print(right, operation, left)
+        # print(right, operation, left)
         if operation == "+":
             if type(right) == str or type(left) == str:
                 return str(right) + str(left)
@@ -196,7 +227,8 @@ def text_spliter(s, line_number):
         s = s[current + y + 1:]
         x = s.find("\"") + 1
     sp += s.split()
-    return sp
+    return extended_split(sp)
+    # return sp
 
 
 class Interpretor():
@@ -219,87 +251,137 @@ class Interpretor():
         file1 = open(self.filename, 'r', encoding="utf-8")
         Lines = file1.readlines()
 
-        line_number = 0
         args = []
         vals = []
 
         depth = 0
-        doSection = True
+        skipDepth = 0
         doElse = False
 
         depth_arr = []
         # Strips the newline character
         skip = False
-        for line in Lines:
+
+        efo = len(Lines)
+        next_line = 0
+        while next_line < efo:
+            line = Lines[next_line]
+            current_line = next_line
+            next_line += 1
             if len(line) > 0:
                 if line[0] == ";":
                     skip = not skip
-                    line_number += 1
                     continue
 
             if skip:
-                line_number += 1
                 continue
-            x = text_spliter(line, line_number)
-            self.debug(str(line_number) + " : " + str(x))
+            x = text_spliter(line, current_line)
+            #self.debug(str(current_line) + " : " + str(x))
 
             if len(x) == 0:
                 continue
 
             if len(x) == 1:
-                if(x[0] == "-"):
+                if(x[0] == "$-"):
                     if(depth == 0):
-                        hError(line_number, "סיומת של סקציה -, במקום לא חוקי!")
+                        hError(current_line, "סיומת של סקציה - במקום לא חוקי!")
                     do = depth_arr.pop()
-                    depth = do[0]
-                    doSection = do[1]
-                    doElse = do[2]
-
-                if(x[0] == "אחרת"):
-                    if not doSection:
-                        doSection = True
-                        doElse = False
+                    if skipDepth == 0:
+                        clear_scope(args, vals)
                     else:
-                        doSection = False
-                        doElse = False
+                        skipDepth -= 1
+                    depth -= 1
+                    doElse = do[0]
+                    goto = do[1]
+
+                    if goto >= 0:
+                        next_line = goto
+                        #print("goto", goto)
+                    continue
+
+            if(x[0] == "אחרת"):
+                if skipDepth > 1:
+                    continue
+                elif skipDepth == 1:
+                    if doElse:
+                        if len(x) > 1 and x[1] == "אם":
+                            condition = compute_val(
+                                args, vals, x[2:], current_line)
+                            if condition:
+                                args.append("$")
+                                vals.append("-")
+                                doElse = False
+                                skipDepth = 0
+                        else:
+                            skipDepth = 0
+                            args.append("$")
+                            vals.append("-")
+                else:
+                    skipDepth = 1
                 continue
 
-            if not doSection:
+            if skipDepth > 0:
+                if x[0] == "אם" or x[0] == "כל":
+                    depth += 1
+                    skipDepth += 1
+                    depth_arr.append([doElse, -1])
+                    doElse = False
                 continue
 
             if len(x) > 1:
-                if x[1] == "=":
-                    args.append(x[0])
-                    #vals.append(get_val(args, vals, x[2], line_number))
-                    vals.append(compute_val(
-                        args, vals, extended_split(x[2:]), line_number))
-                if x[0] == "אם":
-                    depth_arr.append([depth, doSection, doElse])
+                if x[0] == "כל":
+                    if x[1] == "עוד":
+                        depth += 1
+                        goto = current_line
+                        condition = compute_val(
+                            args, vals, x[2:], current_line)
+                        if condition:
+                            args.append("$")
+                            vals.append("-")
+                        else:
+                            goto = -1
+                            skipDepth += 1
+                        # print(condition)
+                        depth_arr.append([doElse, goto])
+                        doElse = False
+
+                    else:
+                        hError(current_line, "קוד שגוי אחרי כל מצפה ל-עוד")
+
+                elif x[0] == "אם":
+                    depth_arr.append([doElse, -1])
                     depth += 1
                     condition = compute_val(
-                        args, vals, extended_split(x[1:]), line_number)
+                        args, vals, x[1:], current_line)
                     if condition:
+                        args.append("$")
+                        vals.append("-")
                         doElse = False
-                        doSection = True
                     else:
+                        skipDepth += 1
                         doElse = True
-                        doSection = False
 
-                if x[0] == "תדפיס":
+                elif x[0] == "תדפיס":
                     message = compute_val(
-                        args, vals, extended_split(x[1:]), line_number)
-                    # for i in range(1, len(x)):
-                    #     message = ""
-                    #     if x[i][0] == '\"':
-                    #         message += x[i][1:]
-                    #     else:
-                    #         message += str(get_val(args, vals,
-                    #                        x[i], line_number))
-                    # count += 1
+                        args, vals, x[1:], current_line)
                     self.log(message)
-            # else:
-            #     sys.exit(get_display("שגיאה בשורה " +
-            #              str(line_number) + " : סינטקס לא נכון."))
-            line_number += 1
+                elif x[0] == "ויהי":
+                    if len(x) < 3 or x[2] != "$=":
+                        hError(current_line, "קוד שגוי!")
+                    arg = x[1]
+                    val = compute_val(
+                        args, vals, x[3:], current_line)
+                    add_variable(args, vals, arg, val)
+                elif x[1] == "$=":
+                    arg = x[0]
+                    val = compute_val(
+                        args, vals, x[2:], current_line)
+                    # add_variable(args, vals, arg, val)
+                    if not override_variable(args, vals,  arg, val):
+                        hError(current_line, "השמתנה " + arg + " לא הוגדרת!")
+                        # else:
+                        #     sys.exit(get_display("שגיאה בשורה " +
+                        #              str(line_number) + " : סינטקס לא נכון."))
         if depth > 0:
-            hError(line_number, "קוד שגוי חסר סוף סקציה!")
+            hError(current_line, "קוד שגוי חסר סוף סקציה!")
+        # self.debug(str(args) + "\n" + str(vals))
