@@ -14,3 +14,5 @@ compiler = HePyCompiler.Compiler(sys.argv[1], debug, flip)
 #compiler.IsDebug = False
 print("----- Compiler test ------")
 compiler.run()
+
+compiler.compile_cpp("compile_test.cpp")

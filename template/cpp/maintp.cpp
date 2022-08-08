@@ -1,0 +1,37 @@
+#include <algorithm>
+#include <fcntl.h> // for _setmode
+#include <io.h>
+#include <iostream>
+#include <windows.h>
+using namespace std;
+
+std::wstring operator+(const int b, const std::wstring &a) {
+    return std::to_wstring(b) + a;
+}
+
+std::wstring operator+(const double b, const std::wstring &a) {
+    return std::to_wstring(b) + a;
+}
+
+std::wstring operator+(const std::wstring &a, const int b) {
+    return a + std::to_wstring(b);
+}
+
+std::wstring operator+(const std::wstring &a, const double b) {
+    return a + std::to_wstring(b);
+}
+
+std::wstring reverse(const std::wstring &str) {
+    std::wstring ret;
+    for (auto it = str.end() - 1; it != str.begin() - 1; --it)
+        ret += *it;
+    return ret;
+}
+
+void main_hebrew();
+
+int main() {
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    main_hebrew();
+    return 0;
+}
