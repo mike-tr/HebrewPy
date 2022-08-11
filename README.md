@@ -26,8 +26,10 @@ compiler.compile_cpp("outputfile.cpp")
 - Supports +,-,/,* and or as well as ().
   - ויהיה איקס = 5/10+(33/(10/2))
   - Can add to string number, with will simply append it, and can combine strings by +.
-- if, else if, else, while
+- if, else if, else, while ( אם, אחרת אם, אחרת, כל עוד )
+### Example of code:
 ```
+ויהי א=30
 כל עוד א > 0
 	תדפיס "א = " + א
 	אם א > 10
