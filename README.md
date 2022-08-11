@@ -26,11 +26,11 @@ compiler.compile_cpp("outputfile.cpp")
 
 ## What currently supported
 - Set/Initialize variables. (keyword ויהי)
-  - ויהי שם_משתנה = ערך_כלשהו
+  - ``` ויהי שם_משתנה = ערך_כלשהו ```
 - Print. (keyword הדפס)
-  - הדפס "משהו" + שם_משתנה
+  - ``` הדפס "משהו" + שם_משתנה ```
 - Supports +,-,/,* and or as well as ().
-  - ויהיה איקס = 5/10+(33/(10/2))
+  - ``` ויהיה איקס = 5/10+(33/(10/2)) ```
   - Can add to string number, with will simply append it, and can combine strings by +.
 - if, else if, else, while ( אם, אחרת אם, אחרת, כל עוד )
 ### Example of code:
