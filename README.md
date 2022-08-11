@@ -6,16 +6,22 @@ Currently, one can interpret and run the code as python, or compile it into C++.
 
 ### To run the code, one would need to call:
 ```
-compiler = HePyCompiler.Compiler( sourcefile, debug=false, flip=true)
+import HePyCompiler
+
+compiler = HePyCompiler.Compiler( "sourcefile.something", debug=false, flip=true)
 compiler.run()
 ```
 * this will run the code in python *
 * debug - prints some debug info, flip = mirrors the output *
+* code will be read from "sourcefile.something" *
 
 ### To compile into Cpp file.
-compiler = HePyCompiler.Compiler( sourcefile, debug=false)
-compiler.compile_cpp("outputfile.cpp")
+'''
+import HePyCompiler
 
+compiler = HePyCompiler.Compiler( "sourcefile.something", debug=false)
+compiler.compile_cpp("outputfile.cpp")
+'''
 * this will rewrite/create a new file outputfile.cpp with the Cpp code *
 
 ## What currently supported
