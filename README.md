@@ -61,5 +61,3 @@ and soo on, i will likely in the future add a file with keywords, so one can cha
 #### python vs c++
 There might be differences in behaviour for instance as python allows one to override existing variable with a value of a different type, code that does exactly that would 
 work fine in python (i.e if we run compiler.run() ), but will return an uncompilable code for c++ (i.e compiler.compile_cpp("outputfile.cpp")).
-
-#### this was done for fun.
